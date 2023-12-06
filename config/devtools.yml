@@ -1,0 +1,32 @@
+# This file documents repositories that are nurtured by Distronode DevTools team.
+# Not all these repos are fully managed or maintained by the team.
+# We aim to use this file when performing maintenance and audit.
+repos:
+  # primary projects
+  - distronode/distronode-dev-tools # former cdk/sdk, the devtools 'bundle'
+  - distronode/distronode-language-server
+  - distronode/distronode-lint
+  - distronode/distronode-navigator
+  - distronode/creator-ee # our execution environment
+  - distronode/molecule
+  - distronode/vscode-distronode
+  # experimental / tech-preview
+  - distronode/distronode-creator # scaffolding (templating) for new content
+  - distronode/distronode-development-environment # former pip4a (venv installer)
+  - distronode/pytest-distronode
+  - distronode/tox-distronode
+  # auxiliary (usually dependencies)
+  - distronode/distronode-compat
+  - distronode/mkdocs-distronode
+  - distronode/devtools
+  - pycontribs/enrich
+  - pycontribs/subprocess-tee
+  - distronode-collections/community.molecule
+  # nurtured (helped)
+
+  - distronode-community/molecule-plugins
+  # experimental, unmaintained or obsoleted:
+  # - distronode/distronode-lint-action
+  # - pycontribs/selinux
+  # - distronode-community/protogen # deprecated?
+  # - distronode-community/role2collection
