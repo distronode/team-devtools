@@ -1,0 +1,85 @@
+# ack workflow runs on any change made to a pull-request and aims to verify
+# that is following our practices. Initial version is checking correct label
+# presence.
+name: ack
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request_target:
+    types: [opened, labeled, unlabeled, synchronize]
+  workflow_call: # allows reuse of this workflow from other devtools repos
+    secrets:
+      BOT_PAT:
+        required: false
+jobs:
+  ack:
+    runs-on: ubuntu-latest
+    environment: ack
+    permissions:
+      checks: write
+      contents: write # needed to update release
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Use of release drafter action for adding semantic labels based on
+      # either title, body or source branch name. We ignore potential failure
+      # of this step.
+      - name: Auto-add labels
+        uses: release-drafter/release-drafter@v5
+        if: ${{ github.event.pull_request.mergeable }}
+        with:
+          # we only want to use the auto-labeler bits:
+          disable-autolabeler: false
+          disable-releaser: true
+        # config from .github/release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Verify PR label action
+        uses: mheap/github-action-required-labels@v5
+        with:
+          mode: exactly
+          count: 1
+          add_comment: true
+          exit_type: failure
+          labels: |
+            bug
+            enhancement
+            major
+            minor
+            patch
+            skip-changelog
+
+      - name: Update release notes if this is already merged
+        if: github.event.pull_request.merged == true
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add issue or pull-request to 'devtools' project
+        # Workaround for running this step only if BOT_PAT secret is found
+        env:
+          BOT_PAT: ${{ secrets.BOT_PAT }}
+        if: env.BOT_PAT != null
+        uses: actions/add-to-project@main
+        with:
+          project-url: https://github.com/orgs/distronode/projects/86
+          # Do not use secrets.GITHUB_TOKEN here because it does not have
+          # access to projects. Only personal access tokens (PAT) can be used.
+          github-token: ${{ secrets.BOT_PAT }}
+          # labeled: skip-changelog
+          # label-operator: NOT
+
+      # - name: Auto-approve pull-requests made by approved bots
+      #   # https://github.com/marketplace/actions/auto-approve
+      #   if: contains(fromJson('["dependabot[bot]", "pre-commit-ci[bot]"]'), github.actor)
+      #   uses: hmarr/auto-approve-action@v3
+
+      # - name: Enable auto-merge on changes made by approved bots
+      #   if: contains(fromJson('["dependabot[bot]", "pre-commit-ci[bot]"]'), github.actor)
+      #   uses: alexwilson/enable-github-automerge-action@main
+      #   with:
+      #     github-token: "${{ secrets.GITHUB_TOKEN }}"
